@@ -1,0 +1,1 @@
+export type View = 'marketplace' | 'search' | 'create_ad' | 'chat' | 'profile' | 'manage_listings' | 'admin_dashboard' | 'theme_editor' | 'category_editor' | 'advertising_management' | 'promotion_center';

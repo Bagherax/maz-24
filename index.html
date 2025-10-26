@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MAZ P2P</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'primary': 'var(--color-primary)',
+              'secondary': 'var(--color-secondary)',
+              'accent': 'var(--color-accent)',
+              'accent-hover': 'var(--color-accent-hover)',
+              'text-primary': 'var(--color-text-primary)',
+              'text-secondary': 'var(--color-text-secondary)',
+              'border-color': 'var(--color-border-color)',
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --color-primary: #FFFFFF;
+        --color-secondary: #F3F4F6;
+        --color-accent: #4F46E5;
+        --color-accent-hover: #4338CA;
+        --color-text-primary: #111827;
+        --color-text-secondary: #6B7280;
+        --color-border-color: #E5E7EB;
+      }
+      html.dark {
+        --color-primary: #111827;
+        --color-secondary: #1F2937;
+        --color-accent: #6366F1;
+        --color-accent-hover: #4F46E5;
+        --color-text-primary: #F9FAFB;
+        --color-text-secondary: #9CA3AF;
+        --color-border-color: #374151;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--color-primary);
+        color: var(--color-text-primary);
+        transition: background-color 0.3s, color 0.3s;
+      }
+      
+      .ask-ai-wrapper {
+        display: inline-block;
+        width: 280px; /* Adjustable width */
+        position: relative;
+      }
+
+      .ask-ai-wrapper .ai-input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: #9cc9d9;
+        border: 2px solid #4a4a4a;
+        border-radius: 12px;
+        padding: 10px 14px;
+        box-shadow: 0 4px 12px rgba(73, 154, 212, 0.1);
+        transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+        overflow: hidden;
+      }
+
+      /* Input field */
+      .ask-ai-wrapper .ai-input {
+        flex-grow: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        font-family: sans-serif;
+        font-size: 1rem;
+        color: #333;
+        padding: 6px 10px;
+        width: 100%;
+        position: relative; /* Ensure it stays above other elements */
+        z-index: 2; /* Bring input to the front */
+        transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding-right 0.2s ease-in-out;
+      }
+
+      /* SVG container */
+      .ask-ai-wrapper .icon-container {
+        position: relative;
+        width: 24px;
+        height: 24px;
+        transition: all 0.5s cubic-bezier(0.7, -0.5, 0.3, 1.5);
+        cursor: pointer;
+        z-index: 2; /* Ensure SVG is clickable */
+      }
+
+      /* SVG animation */
+      .ask-ai-wrapper .ai-icon path {
+        fill: #4a4a4a;
+        transform-origin: center;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* Subtle underline effect */
+      .ask-ai-wrapper .underline-effect {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: #ff6b6b;
+        transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+        z-index: 1;
+      }
+
+      /* Ripple circle */
+      .ask-ai-wrapper .ripple-circle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(28, 132, 164, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 0;
+      }
+
+      /* Floating dots */
+      .ask-ai-wrapper .floating-dots {
+        position: absolute;
+        inset: 0;
+        pointer-events: none; /* Prevent dots from blocking input */
+        z-index: 1; /* Below input but above background */
+      }
+
+      .ask-ai-wrapper .floating-dots span {
+        position: absolute;
+        width: 3px;
+        height: 3px;
+        background: #ff6b6b;
+        border-radius: 50%;
+        opacity: 0;
+        transition:
+          opacity 0.3s ease,
+          transform 0.6s cubic-bezier(0.7, -0.5, 0.3, 1.5);
+      }
+
+      /* Background fade */
+      .ask-ai-wrapper .bg-fade {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 107, 107, 0.05),
+          rgba(255, 235, 235, 0.1)
+        );
+        opacity: 0;
+        transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+        z-index: 0;
+      }
+
+      /* Hover and focus states */
+      .ask-ai-wrapper .ai-input-container:hover,
+      .ask-ai-wrapper .ai-input:focus-within .ai-input-container {
+        border-color: #ff6b6b;
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
+        transform: translateY(-4px);
+      }
+
+      .ask-ai-wrapper .ai-input-container:hover .icon-container,
+      .ask-ai-wrapper .ai-input:focus-within .icon-container {
+        transform: translateY(-2px) scale(1.1);
+      }
+
+      .ask-ai-wrapper .ai-input-container:hover .ai-icon path,
+      .ask-ai-wrapper .ai-input:focus-within .ai-icon path {
+        fill: #ff6b6b;
+        transform: scale(1.1) rotate(5deg);
+        animation: gentleBounce 0.5s infinite alternate
+          cubic-bezier(0.7, -0.5, 0.3, 1.5);
+      }
+
+      .ask-ai-wrapper .ai-input-container:hover .underline-effect,
+      .ask-ai-wrapper .ai-input:focus-within .underline-effect {
+        width: 100%;
+      }
+
+      .ask-ai-wrapper .ai-input-container:hover .ripple-circle,
+      .ask-ai-wrapper .ai-input:focus-within .ripple-circle {
+        width: 200px;
+        height: 200px;
+      }
+
+      .ask-ai-wrapper .ai-input-container:hover .floating-dots span,
+      .ask-ai-wrapper .ai-input:focus-within .floating-dots span {
+        opacity: 1;
+        animation: floatUp 1.2s infinite cubic-bezier(0.65, 0, 0.35, 1);
+      }
+
+      .ask-ai-wrapper .ai-input-container:hover .bg-fade,
+      .ask-ai-wrapper .ai-input:focus-within .bg-fade {
+        opacity: 1;
+      }
+
+      /* Focus state for input */
+      .ask-ai-wrapper .ai-input:focus {
+        color: #1E40AF; /* Dark Blue */
+        font-weight: 600; /* Semibold for clarity */
+      }
+      
+      /* Clear Icon for AI Search */
+      .ask-ai-wrapper .clear-icon-container {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 3;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s;
+        color: #4a4a4a;
+      }
+
+      .ask-ai-wrapper .clear-icon-container:hover {
+        background-color: rgba(0,0,0,0.1);
+      }
+
+      /* Animations */
+      @keyframes gentleBounce {
+        0% {
+          transform: scale(1.1) translateY(1px);
+        }
+        100% {
+          transform: scale(1.1) translateY(-1px);
+        }
+      }
+
+      @keyframes floatUp {
+        0% {
+          transform: translate(var(--x), var(--y)) scale(1);
+          opacity: 0;
+        }
+        50% {
+          transform: translate(var(--x), calc(var(--y) - 15px)) scale(1.3);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(var(--x), calc(var(--y) - 30px)) scale(1);
+          opacity: 0;
+        }
+      }
+
+      /* Dot positions */
+      .ask-ai-wrapper .floating-dots span:nth-child(1) {
+        --x: 10px;
+        --y: 10px;
+        animation-delay: 0s;
+      }
+      .ask-ai-wrapper .floating-dots span:nth-child(2) {
+        --x: -5px;
+        --y: 5px;
+        animation-delay: 0.2s;
+      }
+      .ask-ai-wrapper .floating-dots span:nth-child(3) {
+        --x: 15px;
+        --y: 0px;
+        animation-delay: 0.4s;
+      }
+      .ask-ai-wrapper .floating-dots span:nth-child(4) {
+        --x: -10px;
+        --y: 15px;
+        animation-delay: 0.6s;
+      }
+
+      /* AI Search Panel */
+      .search-panel-backdrop {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0,0,0,0.6);
+        z-index: 30;
+      }
+      .search-panel {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: var(--color-secondary);
+        border-bottom-left-radius: 0.75rem;
+        border-bottom-right-radius: 0.75rem;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        border: 1px solid var(--color-border-color);
+        border-top: none;
+        z-index: 35;
+        max-height: 70vh;
+        overflow: hidden; /* Hide content during animation */
+        transform-origin: top;
+        transform: translateY(-10px);
+        opacity: 0;
+        transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+        pointer-events: none;
+      }
+      .search-panel.open {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+        overflow-y: auto; /* Re-enable scrolling when open */
+      }
+
+      /* Settings Panel */
+      .settings-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 280px;
+        max-width: 80vw;
+        background-color: var(--color-secondary);
+        z-index: 60;
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+        border-left: 1px solid var(--color-border-color);
+        display: flex;
+        flex-direction: column;
+      }
+      .settings-panel.open {
+        transform: translateX(0);
+      }
+      .settings-backdrop {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0,0,0,0.6);
+        z-index: 59;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        pointer-events: none;
+      }
+      .settings-backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+</head>
+  <body class="bg-primary text-text-primary">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
