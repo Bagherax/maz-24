@@ -33,6 +33,10 @@ const App: React.FC = () => {
   const [isPromotionModalOpen, setIsPromotionModalOpen] = React.useState(false);
   
   const setActiveView = (view: View, payload?: any) => {
+    // Scroll main content to top on view change for better UX
+    if (mainScrollRef.current) {
+        mainScrollRef.current.scrollTop = 0;
+    }
     _setActiveView(view);
     setViewPayload(payload);
   };
@@ -61,6 +65,22 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Global navigation event listener to allow decoupled components to trigger view changes.
+  React.useEffect(() => {
+    const handleNavigation = (event: CustomEvent) => {
+        const { view, payload } = event.detail;
+        if (view) {
+            setActiveView(view, payload);
+        }
+    };
+
+    window.addEventListener('navigateTo', handleNavigation as EventListener);
+    
+    return () => {
+        window.removeEventListener('navigateTo', handleNavigation as EventListener);
+    };
+  }, []); // Empty dependency array ensures this runs only once.
+
 
   const renderView = () => {
     switch (activeView) {
@@ -71,7 +91,7 @@ const App: React.FC = () => {
       case VIEWS.CREATE_AD:
         return <CreateAd setActiveView={setActiveView} />;
       case VIEWS.CHAT:
-        return <Chat />;
+        return <Chat payload={viewPayload} />;
       case VIEWS.PROFILE:
         return <Profile setActiveView={setActiveView} />;
       case VIEWS.MANAGE_LISTINGS:

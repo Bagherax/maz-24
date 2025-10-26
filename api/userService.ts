@@ -1,6 +1,17 @@
 import { MOCK_USERS, simulateDelay, JWT_KEY, getAndSaveUser } from './mockData';
-import type { User } from '../types';
+import type { User, ChatSettings, QAPair } from '../types';
 import { getCurrentUser } from './authService';
+
+const calculateFollowersCount = (userId: string): number => {
+    let count = 0;
+    MOCK_USERS.forEach(u => {
+        if (u.followingIds?.includes(userId)) {
+            count++;
+        }
+    });
+    return count;
+};
+
 
 /**
  * Fetches a user's public profile information by their ID.
@@ -10,7 +21,12 @@ import { getCurrentUser } from './authService';
 export const getUserById = async (userId: string): Promise<User | null> => {
     await simulateDelay(200);
     const user = MOCK_USERS.find(u => u.id === userId);
-    return user || null;
+    if (!user) return null;
+
+    return {
+        ...user,
+        followersCount: calculateFollowersCount(userId),
+    };
 };
 
 /**
@@ -20,7 +36,7 @@ export const getUserById = async (userId: string): Promise<User | null> => {
  */
 export const updateUserProfile = async (updates: Partial<User>): Promise<User> => {
     await simulateDelay(500);
-    return getAndSaveUser(user => ({ ...user, ...updates }));
+    return getAndSaveUser(user => ({...user, ...updates}));
 };
 
 
@@ -31,25 +47,15 @@ export const updateUserProfile = async (updates: Partial<User>): Promise<User> =
  */
 export const followUser = async (userIdToFollow: string): Promise<User> => {
     await simulateDelay(300);
-    const currentUser = await getCurrentUser();
-    if (!currentUser) throw new Error("Authentication required to follow users.");
-    if (currentUser.id === userIdToFollow) throw new Error("You cannot follow yourself.");
-
-    const followingIds = currentUser.followingIds || [];
-    if (!followingIds.includes(userIdToFollow)) {
-        followingIds.push(userIdToFollow);
-    }
-    const updatedUser = { ...currentUser, followingIds };
-
-    // In this mock, we have to update the user object in both the MOCK_USERS array
-    // and the JWT in localStorage to ensure consistency across the app.
-    const userIndex = MOCK_USERS.findIndex(u => u.id === currentUser.id);
-    if (userIndex !== -1) {
-        MOCK_USERS[userIndex] = updatedUser;
-    }
-    localStorage.setItem(JWT_KEY, JSON.stringify(updatedUser));
     
-    return updatedUser;
+    return getAndSaveUser(user => {
+        if (user.id === userIdToFollow) throw new Error("You cannot follow yourself.");
+        const followingIds = user.followingIds || [];
+        if (!followingIds.includes(userIdToFollow)) {
+            followingIds.push(userIdToFollow);
+        }
+        return { ...user, followingIds };
+    });
 };
 
 /**
@@ -59,17 +65,44 @@ export const followUser = async (userIdToFollow: string): Promise<User> => {
  */
 export const unfollowUser = async (userIdToUnfollow: string): Promise<User> => {
     await simulateDelay(300);
-    const currentUser = await getCurrentUser();
-    if (!currentUser) throw new Error("Authentication required.");
+    return getAndSaveUser(user => {
+        const followingIds = (user.followingIds || []).filter(id => id !== userIdToUnfollow);
+        return { ...user, followingIds };
+    });
+};
 
-    const followingIds = (currentUser.followingIds || []).filter(id => id !== userIdToUnfollow);
-    const updatedUser = { ...currentUser, followingIds };
-    
-    const userIndex = MOCK_USERS.findIndex(u => u.id === currentUser.id);
-    if (userIndex !== -1) {
-        MOCK_USERS[userIndex] = updatedUser;
-    }
-    localStorage.setItem(JWT_KEY, JSON.stringify(updatedUser));
+/**
+ * Updates the chat settings for the current user.
+ * @param settings The new chat settings.
+ * @returns The updated user object.
+ */
+export const updateChatSettings = async (settings: ChatSettings): Promise<User> => {
+    await simulateDelay(400);
+    return getAndSaveUser(user => ({
+        ...user,
+        chatSettings: {
+            ...user.chatSettings,
+            ...settings
+        }
+    }));
+};
 
-    return updatedUser;
+/**
+ * Adds a new learned question-answer pair to the user's AI knowledge base.
+ * @param qaPair The question and answer pair to learn.
+ * @returns The updated user object.
+ */
+export const addLearnedQA = async (qaPair: QAPair): Promise<User> => {
+    await simulateDelay(200);
+    return getAndSaveUser(user => {
+        const learnedQA = user.learnedQA || [];
+        // Prevent duplicates
+        const exists = learnedQA.some(
+            p => p.question.toLowerCase() === qaPair.question.toLowerCase() && p.adId === qaPair.adId
+        );
+        if (!exists) {
+            learnedQA.push(qaPair);
+        }
+        return { ...user, learnedQA };
+    });
 };

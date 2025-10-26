@@ -8,4 +8,5 @@ export interface Review {
   rating: number; // 1 to 5
   comment: string;
   timestamp: string;
+  signature?: string;
 }

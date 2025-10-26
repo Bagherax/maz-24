@@ -22,7 +22,7 @@
  *     based on user search frequency, making the assistant smarter over time.
  */
 
-import type { Ad, View } from '../types';
+import type { Ad, View, QAPair } from '../types';
 import { answerQueryAboutMarketplace } from './aiService';
 
 export interface SearchIndexEntry {
@@ -187,4 +187,46 @@ export const getAutocompleteSuggestion = (query: string, searchIndex: SearchInde
     }
 
     return null;
+};
+
+/**
+ * Simulates on-device AI to suggest replies in a chat conversation.
+ * It prioritizes learned Q&A pairs, then falls back to analyzing the ad's data.
+ * @param question The buyer's message/question.
+ * @param ad The ad context for the conversation.
+ * @param learnedQA The seller's personal knowledge base of Q&A pairs.
+ * @returns A promise that resolves to an array of suggested reply strings.
+ */
+export const suggestChatReply = async (
+    question: string,
+    ad: Ad,
+    learnedQA: QAPair[] = []
+): Promise<string[]> => {
+    console.log("Simulating on-device chat reply suggestion...");
+    await new Promise(res => setTimeout(res, 300));
+
+    const q = question.toLowerCase();
+    const suggestions: Set<string> = new Set();
+
+    // 1. Check learned Q&A first (highest priority)
+    const learnedResponse = learnedQA.find(qa => q.includes(qa.question.toLowerCase().slice(0, -1))); // simple substring match
+    if (learnedResponse) {
+        suggestions.add(learnedResponse.answer);
+    }
+
+    // 2. Fallback to ad data analysis
+    if (q.includes('price')) {
+        suggestions.add(`The price is $${ad.price.toFixed(2)}.`);
+    }
+    if (q.includes('condition')) {
+        suggestions.add(`The item is listed as "${ad.condition}".`);
+    }
+    if (q.includes('location') || q.includes('where')) {
+        suggestions.add(`It's located in ${ad.location}.`);
+    }
+    if (q.includes('available')) {
+        suggestions.add("Yes, it's still available!");
+    }
+
+    return Array.from(suggestions);
 };

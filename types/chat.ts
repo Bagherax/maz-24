@@ -16,6 +16,7 @@ export interface ChatMessage {
     timestamp: string;
     isRead: boolean;
     attachment?: Attachment;
+    signature?: string;
 }
 
 export interface Conversation {

@@ -3,6 +3,7 @@ import * as api from '../api';
 import { useMarketplace } from '../hooks/useMarketplace';
 import type { AiCommandResult, SearchIndexEntry } from '../api/masaService';
 import type { View } from '../types';
+import { useRecentSearches } from '../hooks/useRecentSearches';
 
 interface SearchContextType {
   isSearchPanelOpen: boolean;
@@ -16,6 +17,8 @@ interface SearchContextType {
   loading: boolean;
   executeQuery: (directQuery?: string) => void;
   handleCommandAction: (command: AiCommandResult, setActiveView: (view: View) => void) => void;
+  recentSearches: string[];
+  clearRecentSearches: () => void;
 }
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
@@ -28,6 +31,7 @@ export const SearchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [loading, setLoading] = useState(false);
   const { ads, setSearchTerm, setCategoryPathFilter } = useMarketplace();
   const [searchIndex, setSearchIndex] = useState<SearchIndexEntry[]>([]);
+  const { searches: recentSearches, addSearch: addRecentSearch, clearSearches: clearRecentSearches } = useRecentSearches();
 
   useEffect(() => {
     if (ads.length > 0) {
@@ -64,8 +68,10 @@ export const SearchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [suggestion]);
 
   const executeQuery = useCallback(async (directQuery?: string) => {
-    const finalQuery = directQuery ?? (query + (suggestion || ''));
-    if (!finalQuery.trim()) return;
+    const finalQuery = (directQuery ?? (query + (suggestion || ''))).trim();
+    if (!finalQuery) return;
+
+    addRecentSearch(finalQuery);
     
     if(!directQuery) {
         setQuery(finalQuery);
@@ -83,7 +89,7 @@ export const SearchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     } finally {
       setLoading(false);
     }
-  }, [query, suggestion, ads]);
+  }, [query, suggestion, ads, addRecentSearch]);
 
   const handleCommandAction = (command: AiCommandResult, setActiveView: (view: View) => void) => {
       switch(command.type) {
@@ -120,6 +126,8 @@ export const SearchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     loading,
     executeQuery,
     handleCommandAction,
+    recentSearches,
+    clearRecentSearches,
   };
 
   return (

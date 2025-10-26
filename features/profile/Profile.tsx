@@ -15,6 +15,8 @@ import { PencilIcon } from '../../components/icons/PencilIcon';
 import { ChatIcon } from '../../components/icons/ChatIcon';
 import { LogoutIcon } from '../../components/icons/LogoutIcon';
 import { CameraIcon } from '../../components/icons/CameraIcon';
+import { useMarketplace } from '../../hooks/useMarketplace';
+import { RocketIcon } from '../../components/icons/RocketIcon';
 
 interface ProfileProps {
     setActiveView: (view: View) => void;
@@ -77,6 +79,7 @@ const EditableImage: React.FC<{
 
 const Profile: React.FC<ProfileProps> = ({ setActiveView }) => {
   const { identity, logout, promptForIdentity, updateCurrentUser } = useAuth();
+  const { myAds } = useMarketplace();
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [cloudConfig, setCloudConfig] = useState<CloudConfig | null>(null);
   const { addNotification } = useNotification();
@@ -279,9 +282,37 @@ const Profile: React.FC<ProfileProps> = ({ setActiveView }) => {
             </div>
         </section>
 
+        <section className="px-4 mt-4 grid grid-cols-3 gap-4 text-center divide-x divide-border-color bg-secondary p-4 rounded-xl">
+            <div>
+                <p className="text-xl font-bold text-text-primary">{myAds.length}</p>
+                <p className="text-xs text-text-secondary">Listings</p>
+            </div>
+            <div>
+                <p className="text-xl font-bold text-text-primary">{currentUser.followersCount || 0}</p>
+                <p className="text-xs text-text-secondary">Followers</p>
+            </div>
+            <div>
+                <p className="text-xl font-bold text-text-primary">{currentUser.followingIds?.length || 0}</p>
+                <p className="text-xs text-text-secondary">Following</p>
+            </div>
+        </section>
+        
+        <section className="px-4 mt-4">
+            <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 flex items-center justify-between">
+                <div className="flex items-center">
+                    <RocketIcon className="h-8 w-8 text-accent" />
+                    <div className="ml-3">
+                        <h4 className="font-bold text-text-primary">Boost Points</h4>
+                        <p className="text-xs text-text-secondary">Use points to promote your ads!</p>
+                    </div>
+                </div>
+                <div className="text-3xl font-bold text-accent">{currentUser.boostPoints || 0}</div>
+            </div>
+        </section>
+
 
         {/* Main Actions */}
-        <section className="space-y-3">
+        <section className="space-y-3 mt-8">
              <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider px-2">Marketplace</h3>
             <div className="bg-secondary p-2 rounded-xl border border-border-color space-y-2">
                 <ActionItem label="Manage Your Listings" icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" /></svg>} onClick={() => setActiveView(VIEWS.MANAGE_LISTINGS)} />

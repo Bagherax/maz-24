@@ -106,6 +106,21 @@ const SellerProfileSheet: React.FC = () => {
                             </div>
                         </section>
 
+                        <section className="grid grid-cols-3 gap-4 text-center px-4 py-3 bg-secondary rounded-xl">
+                            <div>
+                                <p className="text-lg font-bold text-text-primary">{ads.length}</p>
+                                <p className="text-xs text-text-secondary">Listings</p>
+                            </div>
+                            <div>
+                                <p className="text-lg font-bold text-text-primary">{seller.followersCount || 0}</p>
+                                <p className="text-xs text-text-secondary">Followers</p>
+                            </div>
+                            <div>
+                                <p className="text-lg font-bold text-text-primary">{seller.followingIds?.length || 0}</p>
+                                <p className="text-xs text-text-secondary">Following</p>
+                            </div>
+                        </section>
+
                         <section>
                             <FollowButton sellerId={seller.id} className="w-full p-3" />
                         </section>

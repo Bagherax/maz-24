@@ -1,5 +1,5 @@
 import type { Review, User } from '../types';
-import { simulateDelay, getUserLocalReviews, setUserLocalReviews, MOCK_USERS, setUserLocalData, USER_REVIEWS_PREFIX } from './mockData';
+import { simulateDelay, getUserLocalReviews, MOCK_USERS, setUserLocalData, USER_REVIEWS_PREFIX, USER_SUBMITTED_REVIEWS_PREFIX, getUserLocalData } from './mockData';
 import { getCurrentUser } from './authService';
 
 /**
@@ -27,7 +27,7 @@ interface SubmitReviewData {
 /**
  * Submits a new review for a seller.
  * The review is cryptographically signed by the reviewer and stored in the
- * seller's public review space.
+ * seller's public review space, with a copy kept by the reviewer.
  * @param data The review data to be submitted.
  * @returns A promise that resolves to the newly created review.
  */
@@ -49,10 +49,10 @@ export const submitReview = async (data: SubmitReviewData): Promise<Review> => {
         rating: data.rating,
         comment: data.comment,
         timestamp: new Date().toISOString(),
+        signature: `signed_by_${currentUser.id}_at_${Date.now()}`, // Mock signature
     };
 
-    // P2P Simulation: The review is sent to the seller to be added to their
-    // public, user-managed review list.
+    // P2P Simulation: The review is sent to the seller to be added to their public, user-managed review list.
     const sellerReviews = getUserLocalReviews(data.sellerId);
     
     // Prevent duplicate reviews for the same ad from the same user
@@ -63,6 +63,12 @@ export const submitReview = async (data: SubmitReviewData): Promise<Review> => {
     
     sellerReviews.push(newReview);
     setUserLocalData<Review>(USER_REVIEWS_PREFIX, data.sellerId, sellerReviews);
+    
+    // Also save a copy on the reviewer's device as a personal record of reviews they've submitted.
+    const submittedReviews = getUserLocalData<Review>(USER_SUBMITTED_REVIEWS_PREFIX, currentUser.id);
+    submittedReviews.push(newReview);
+    setUserLocalData<Review>(USER_SUBMITTED_REVIEWS_PREFIX, currentUser.id, submittedReviews);
+
 
     // A real backend/P2P system would now trigger a recalculation of the seller's aggregate rating.
     // Here we simulate that for the mock data object.

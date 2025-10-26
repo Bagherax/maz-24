@@ -14,6 +14,7 @@ import PublicSellerReviews from './PublicSellerReviews';
 import { StarRatingDisplay } from '../../components/ui/StarRatingDisplay';
 import { FollowButton } from '../../components/ui/FollowButton';
 import SponsoredAdBanner from '../../components/ui/SponsoredAdBanner';
+import ShareAndEarnModal from './ShareAndEarnModal';
 
 
 // Icons
@@ -25,6 +26,7 @@ import { VerifiedSealIcon } from '../../components/icons/VerifiedSealIcon';
 import { FlagIcon } from '../../components/icons/FlagIcon';
 import { XMarkIcon } from '../../components/icons/XMarkIcon';
 import { useSellerProfile } from '../../context/SellerProfileContext';
+import { VIEWS } from '../../constants/views';
 
 const StickyHeader: React.FC<{ ad: Ad; onContact: () => void; isOwnAd: boolean }> = ({ ad, onContact, isOwnAd }) => (
   <div className="sticky top-0 z-20 flex-shrink-0 bg-secondary/80 backdrop-blur-md border-b border-border-color flex items-center justify-between p-2">
@@ -56,6 +58,7 @@ const AdDetailSheet: React.FC = () => {
   const [showStickyHeader, setShowStickyHeader] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [sponsoredAd, setSponsoredAd] = useState<SponsoredAd | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const uniqueAdsMap = new Map([...ads, ...myAds].map(ad => [ad.id, ad]));
   const ad = activeAdId ? uniqueAdsMap.get(activeAdId) : null;
@@ -98,16 +101,37 @@ const AdDetailSheet: React.FC = () => {
 
   const handleContactSeller = async () => {
     if (!ad || isOwnAd) return;
-    
+
+    // For guests, navigate directly to the chat screen with necessary context.
+    // The Conversation component will handle the identity prompt on send.
     if (!identity) {
-        promptForIdentity();
+        closeAdDetail();
+        window.dispatchEvent(new CustomEvent('navigateTo', {
+            detail: {
+                view: VIEWS.CHAT,
+                payload: { 
+                    recipient: ad.seller,
+                    relatedAdId: ad.id,
+                    relatedAdTitle: ad.title
+                }
+            }
+        }));
         return;
     }
 
+    // Existing logic for logged-in users
     try {
-        await api.startConversationWithSeller(ad.seller, ad.id, ad.title);
-        addNotification(`Conversation started with ${ad.seller.username}. Check your messages.`, 'success');
-        // Future enhancement: could navigate to chat view here.
+        const conversationId = await api.startConversationWithSeller(ad.seller, ad.id, ad.title);
+        addNotification(`Conversation started with ${ad.seller.username}.`, 'success');
+        
+        closeAdDetail();
+
+        window.dispatchEvent(new CustomEvent('navigateTo', {
+            detail: {
+                view: VIEWS.CHAT,
+                payload: { conversationId, recipient: ad.seller }
+            }
+        }));
     } catch (err) {
         addNotification(err instanceof Error ? err.message : 'Could not start chat.', 'error');
     }
@@ -116,6 +140,15 @@ const AdDetailSheet: React.FC = () => {
   const handleSellerClick = () => {
     if (ad) {
         openSellerProfile(ad.seller.id);
+    }
+  };
+
+  const handleShareClick = () => {
+    if (identity?.type === 'FULL_USER') {
+        setIsShareModalOpen(true);
+    } else {
+        addNotification('Please sign in to get your invitation code.', 'info');
+        promptForIdentity();
     }
   };
 
@@ -153,7 +186,7 @@ const AdDetailSheet: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-3">
                         <button className="text-text-secondary hover:text-accent"><FavoriteIcon /></button>
-                        <button className="text-text-secondary hover:text-accent"><ShareIcon /></button>
+                        <button onClick={handleShareClick} className="text-text-secondary hover:text-accent"><ShareIcon /></button>
                     </div>
                 </div>
 
@@ -235,6 +268,7 @@ const AdDetailSheet: React.FC = () => {
           </>
         )}
       </div>
+      {isShareModalOpen && <ShareAndEarnModal onClose={() => setIsShareModalOpen(false)} />}
     </>
   );
 };

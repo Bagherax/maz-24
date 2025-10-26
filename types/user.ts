@@ -2,6 +2,18 @@ import type { AdCollection } from './collection';
 
 export type AdminRole = 'viewer' | 'moderator' | 'policy_admin' | 'super_admin' | 'ui_editor';
 
+export interface QAPair {
+  question: string;
+  answer: string;
+  adId: string; // Context for which ad this Q&A is related to
+}
+
+export interface ChatSettings {
+  welcomeMessage?: string;
+  quickReplies?: string[];
+}
+
+
 export interface User {
   id: string;
   username: string;
@@ -15,7 +27,11 @@ export interface User {
   averageRating?: number;
   totalReviews?: number;
   followingIds?: string[];
+  followersCount?: number;
   collections?: AdCollection[];
+  chatSettings?: ChatSettings;
+  learnedQA?: QAPair[];
+  boostPoints?: number;
 }
 
 // Represents a user with a temporary, local-only session.

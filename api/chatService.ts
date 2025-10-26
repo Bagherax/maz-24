@@ -80,9 +80,11 @@ export const startConversationWithSeller = async (seller: User, adId: string, ad
 };
 
 export const sendMessage = async (
-    receiverId: string, 
+    receiverId: string,
     text: string,
-    attachment?: Omit<Attachment, 'encryptedUrl'>
+    attachment?: Omit<Attachment, 'encryptedUrl'>,
+    adId?: string,
+    adTitle?: string
 ): Promise<ChatMessage> => {
     await simulateDelay(400);
     const currentUser = await getCurrentUser();
@@ -91,18 +93,19 @@ export const sendMessage = async (
     const receiver = MOCK_USERS.find(u => u.id === receiverId);
     if (!receiver) throw new Error("Recipient not found.");
 
-    const { convoId } = findOrCreateConversation(currentUser, receiver);
-    
+    const { convoId: finalConvoId } = findOrCreateConversation(currentUser, receiver, adId, adTitle);
+
     const newMessage: ChatMessage = {
         id: `msg-${Date.now()}`,
-        conversationId: convoId,
+        conversationId: finalConvoId,
         senderId: currentUser.id,
         receiverId: receiver.id,
         text,
         timestamp: new Date().toISOString(),
         isRead: false,
+        signature: `signed_by_${currentUser.id}_at_${Date.now()}` // Mock signature
     };
-    
+
     if (attachment) {
         newMessage.attachment = {
             ...attachment,
@@ -110,21 +113,22 @@ export const sendMessage = async (
             encryptedUrl: `mazdady-cloud://${currentUser.id}/attachments/${attachment.fileName}?sig=...`
         };
     }
-    
+
     // --- P2P Simulation: Save message to BOTH users' local storage ---
-    const senderConvos = getUserLocalConvos(currentUser.id);
+    // Refetch sender convos in case a new one was just created by findOrCreateConversation
+    const allSenderConvos = getUserLocalConvos(currentUser.id);
     const receiverConvos = getUserLocalConvos(receiver.id);
-    
-    const senderConvo = senderConvos.find(c => c.id === convoId)!;
-    const receiverConvo = receiverConvos.find(c => c.id === convoId)!;
+
+    const senderConvo = allSenderConvos.find(c => c.id === finalConvoId)!;
+    const receiverConvo = receiverConvos.find(c => c.id === finalConvoId)!;
 
     senderConvo.messages.push(newMessage);
     senderConvo.lastMessage = newMessage;
-    
+
     receiverConvo.messages.push(newMessage);
     receiverConvo.lastMessage = newMessage;
 
-    setUserLocalConvos(currentUser.id, senderConvos);
+    setUserLocalConvos(currentUser.id, allSenderConvos);
     setUserLocalConvos(receiver.id, receiverConvos);
 
     return newMessage;

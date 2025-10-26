@@ -1,5 +1,5 @@
-import type { User, Ad, AdminDashboardData, AdminLogEntry } from '../types';
-import { MOCK_USERS, ADMIN_LOG_KEY, simulateDelay, getUserLocalAds, setUserLocalAds } from './mockData';
+import type { User, Ad, AdminDashboardData, AdminLogEntry, Conversation } from '../types';
+import { MOCK_USERS, ADMIN_LOG_KEY, simulateDelay, getUserLocalAds, setUserLocalAds, getUserLocalConvos } from './mockData';
 import { getCurrentUser } from './authService';
 import { getAdSlotAnalytics } from './advertisingService';
 
@@ -153,4 +153,29 @@ export const dismissReport = async (adId: string): Promise<void> => {
         }
     }
      if (!adFound) throw new Error("Ad to dismiss not found.");
+};
+
+/**
+ * Simulates an admin requesting and decrypting chat/review history from
+ * both parties involved in a dispute for verification.
+ */
+export const getDisputeEvidence = async (buyerId: string, sellerId: string, conversationId: string): Promise<{ buyerConversation?: Conversation, sellerConversation?: Conversation }> => {
+    await simulateDelay(1000);
+    const adminUser = await getCurrentUser();
+    if (!adminUser || adminUser.tier !== 'MAZ') throw new Error("Unauthorized access.");
+
+    console.log(`[ADMIN] Fetching encrypted evidence for dispute between buyer ${buyerId} and seller ${sellerId}`);
+    
+    // The "decryption" is handled automatically by the base64 decoding in getUserLocalConvos.
+    const buyerConvos = getUserLocalConvos(buyerId);
+    const sellerConvos = getUserLocalConvos(sellerId);
+    
+    const buyerConversation = buyerConvos.find(c => c.id === conversationId);
+    const sellerConversation = sellerConvos.find(c => c.id === conversationId);
+
+    console.log(`[ADMIN] Buyer's conversation version has ${buyerConversation?.messages.length || 0} messages.`);
+    console.log(`[ADMIN] Seller's conversation version has ${sellerConversation?.messages.length || 0} messages.`);
+    // In a real app, we would compare message signatures here to detect tampering.
+
+    return { buyerConversation, sellerConversation };
 };

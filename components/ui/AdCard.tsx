@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import type { Ad, FullUser, Media } from '../../types';
 import { useAdDetail } from '../../context/AdDetailContext';
 import { LocationPinIcon } from '../icons/LocationPinIcon';
-import { StarIcon } from '../icons/StarIcon';
 import type { ViewMode } from '../../context/MarketplaceContext';
 import { useSellerProfile } from '../../context/SellerProfileContext';
 import { useAuth } from '../../context/AuthContext';
@@ -11,6 +10,7 @@ import * as api from '../../api';
 import { UserPlusIcon } from '../icons/UserPlusIcon';
 import { UserCheckIcon } from '../icons/UserCheckIcon';
 import { PlayIcon } from '../icons/PlayIcon';
+import { StarRatingDisplay } from './StarRatingDisplay';
 
 interface AdCardProps {
   ad: Ad;
@@ -123,8 +123,8 @@ const AdCard: React.FC<AdCardProps> = ({ ad, viewMode }) => {
                     </div>
                      {sellerHasReviews && (
                         <div className="flex items-center text-xs">
-                            <StarIcon className="text-yellow-400" />
-                            <span className="ml-0.5 font-bold text-text-primary">{ad.seller.averageRating?.toFixed(1)}</span>
+                            <StarRatingDisplay rating={ad.seller.averageRating || 0} />
+                            <span className="ml-1.5 font-bold text-text-primary">{ad.seller.averageRating?.toFixed(1)}</span>
                             <span className="ml-1 text-text-secondary/80">({ad.seller.totalReviews})</span>
                         </div>
                     )}
@@ -148,8 +148,8 @@ const AdCard: React.FC<AdCardProps> = ({ ad, viewMode }) => {
             <button onClick={handleSellerClick} className="text-xs text-text-secondary truncate hover:underline">{ad.seller.username}</button>
             {sellerHasReviews && (
                 <div className="flex items-center text-xs flex-shrink-0 ml-2">
-                    <StarIcon className="text-yellow-400 h-3 w-3" />
-                    <span className="ml-0.5 font-bold text-text-primary">{ad.seller.averageRating?.toFixed(1)}</span>
+                    <StarRatingDisplay rating={ad.seller.averageRating || 0} />
+                    <span className="ml-1 font-bold text-text-primary">{ad.seller.averageRating?.toFixed(1)}</span>
                     <span className="ml-1 text-text-secondary/80">({ad.seller.totalReviews})</span>
                 </div>
             )}

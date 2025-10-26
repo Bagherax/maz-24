@@ -16,6 +16,7 @@ const LazyAuthModal: React.FC = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [invitationCode, setInvitationCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -35,7 +36,7 @@ const LazyAuthModal: React.FC = () => {
       if (authModalState === 'login') {
         await login(email, password);
       } else {
-        await register(username, email, password);
+        await register(username, email, password, invitationCode);
       }
       // On success, the AuthContext listener will close the modal.
     } catch (err) {
@@ -105,6 +106,15 @@ const LazyAuthModal: React.FC = () => {
                 required
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-border-color bg-primary placeholder-text-secondary text-text-primary focus:outline-none focus:ring-accent focus:border-accent sm:text-sm"
               />
+              {!isLogin && (
+                 <input
+                  type="text"
+                  value={invitationCode}
+                  onChange={(e) => setInvitationCode(e.target.value)}
+                  placeholder="Invitation Code (Optional)"
+                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-border-color bg-primary placeholder-text-secondary text-text-primary focus:outline-none focus:ring-accent focus:border-accent sm:text-sm"
+                />
+              )}
 
               {error && <p className="text-red-500 text-sm">{error}</p>}
 

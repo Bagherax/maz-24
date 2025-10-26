@@ -7,16 +7,18 @@ export const JWT_KEY = 'mazdady_jwt';
 export const USER_ADS_PREFIX = 'mazdady_user_ads_';
 export const USER_CONVOS_PREFIX = 'mazdady_user_convos_';
 export const USER_REVIEWS_PREFIX = 'mazdady_user_reviews_';
+export const USER_SUBMITTED_REVIEWS_PREFIX = 'mazdady_user_submitted_reviews_';
 export const NETWORK_STATUS_KEY = 'mazdady_network_status';
 export const CLOUD_CONFIG_KEY = 'mazdady_cloud_config';
 export const ADMIN_LOG_KEY = 'mazdady_admin_log';
 export const SPONSORED_ADS_KEY = 'mazdady_sponsored_ads';
 export const AD_ANALYTICS_KEY = 'mazdady_ad_analytics';
+export const USERS_DB_KEY = 'mazdady_users_db';
 
 
 // --- MOCK USER DATABASE ---
-export const MOCK_USERS: User[] = [
-    { id: 'user-1', username: 'mazdady_admin', email: 'admin@mazdady.com', tier: 'MAZ', isVerified: true, avatarUrl: 'https://picsum.photos/seed/admin/200', profileBannerUrl: 'https://picsum.photos/seed/admin_banner/1000/300', profileBackgroundUrl: 'https://www.toptal.com/designers/subtlepatterns/uploads/double-bubble-outline.png', role: 'super_admin', averageRating: 5.0, totalReviews: 2, followingIds: [] },
+const INITIAL_MOCK_USERS: User[] = [
+    { id: 'user-1', username: 'mazdady_admin', email: 'admin@mazdady.com', tier: 'MAZ', isVerified: true, avatarUrl: 'https://picsum.photos/seed/admin/200', profileBannerUrl: 'https://picsum.photos/seed/admin_banner/1000/300', profileBackgroundUrl: 'https://www.toptal.com/designers/subtlepatterns/uploads/double-bubble-outline.png', role: 'super_admin', averageRating: 5.0, totalReviews: 2, followingIds: [], boostPoints: 1000 },
     { 
         id: 'user-2', 
         username: 'seller_pro', 
@@ -32,11 +34,34 @@ export const MOCK_USERS: User[] = [
         collections: [
             { id: 'coll-1', name: 'Rare Collectibles', adIds: ['ad-flagged-1'] },
             { id: 'coll-2', name: 'Daily Drivers', adIds: [] }
-        ]
+        ],
+        chatSettings: {
+            welcomeMessage: "Hello! Thanks for your interest. I'll get back to you as soon as I can.",
+            quickReplies: ["Yes, it's still available.", "Sorry, the price is firm.", "I can ship it to you.", "When would you like to pick it up?"]
+        },
+        learnedQA: [],
+        boostPoints: 250,
     },
-    { id: 'user-3', username: 'casual_seller', email: 'casual@seller.com', tier: 'bronze', isVerified: false, avatarUrl: 'https://picsum.photos/seed/casual/200', profileBannerUrl: 'https://picsum.photos/seed/casual_banner/1000/300', profileBackgroundUrl: 'https://www.toptal.com/designers/subtlepatterns/uploads/leaves.png', averageRating: 4.2, totalReviews: 3, followingIds: [] },
-    { id: 'user-4', username: 'power_user', email: 'power@user.com', tier: 'diamond', isVerified: true, avatarUrl: 'https://picsum.photos/seed/power/200', profileBannerUrl: 'https://picsum.photos/seed/power_banner/1000/300', profileBackgroundUrl: 'https://www.toptal.com/designers/subtlepatterns/uploads/upholstery.png', averageRating: 4.9, totalReviews: 52, followingIds: ['user-2'] },
+    { id: 'user-3', username: 'casual_seller', email: 'casual@seller.com', tier: 'bronze', isVerified: false, avatarUrl: 'https://picsum.photos/seed/casual/200', profileBannerUrl: 'https://picsum.photos/seed/casual_banner/1000/300', profileBackgroundUrl: 'https://www.toptal.com/designers/subtlepatterns/uploads/leaves.png', averageRating: 4.2, totalReviews: 3, followingIds: [], boostPoints: 50 },
+    { id: 'user-4', username: 'power_user', email: 'power@user.com', tier: 'diamond', isVerified: true, avatarUrl: 'https://picsum.photos/seed/power/200', profileBannerUrl: 'https://picsum.photos/seed/power_banner/1000/300', profileBackgroundUrl: 'https://www.toptal.com/designers/subtlepatterns/uploads/upholstery.png', averageRating: 4.9, totalReviews: 52, followingIds: ['user-2'], boostPoints: 500 },
 ];
+
+export let MOCK_USERS: User[];
+
+const initializeUsers = () => {
+    const usersJson = localStorage.getItem(USERS_DB_KEY);
+    if (usersJson) {
+        MOCK_USERS = JSON.parse(usersJson);
+    } else {
+        MOCK_USERS = INITIAL_MOCK_USERS;
+        localStorage.setItem(USERS_DB_KEY, JSON.stringify(MOCK_USERS));
+    }
+}
+initializeUsers();
+
+export const saveUsersToDb = () => {
+    localStorage.setItem(USERS_DB_KEY, JSON.stringify(MOCK_USERS));
+};
 
 const generateMockAds = (): Ad[] => {
     const ads: Ad[] = [];
@@ -146,11 +171,11 @@ const getInitialMockAds = (): Ad[] => {
 
 const getInitialMockReviews = (): { [sellerId: string]: Review[] } => ({
     'user-2': [
-        { id: 'rev-1', adId: 'ad-gen-2', sellerId: 'user-2', reviewer: MOCK_USERS[3], rating: 5, comment: 'Great seller, fast communication and the item was exactly as described. Highly recommended!', timestamp: new Date(Date.now() - 86400000).toISOString() },
-        { id: 'rev-2', adId: 'ad-gen-6', sellerId: 'user-2', reviewer: MOCK_USERS[0], rating: 4, comment: 'Smooth transaction. The product was in excellent condition.', timestamp: new Date(Date.now() - 86400000 * 2).toISOString() }
+        { id: 'rev-1', adId: 'ad-gen-2', sellerId: 'user-2', reviewer: MOCK_USERS[3], rating: 5, comment: 'Great seller, fast communication and the item was exactly as described. Highly recommended!', timestamp: new Date(Date.now() - 86400000).toISOString(), signature: 'mock_sig_rev1' },
+        { id: 'rev-2', adId: 'ad-gen-6', sellerId: 'user-2', reviewer: MOCK_USERS[0], rating: 4, comment: 'Smooth transaction. The product was in excellent condition.', timestamp: new Date(Date.now() - 86400000 * 2).toISOString(), signature: 'mock_sig_rev2' }
     ],
     'user-3': [
-        { id: 'rev-3', adId: 'ad-gen-3', sellerId: 'user-3', reviewer: MOCK_USERS[1], rating: 4, comment: 'Item as described, but shipping was a bit slow.', timestamp: new Date(Date.now() - 86400000 * 3).toISOString() }
+        { id: 'rev-3', adId: 'ad-gen-3', sellerId: 'user-3', reviewer: MOCK_USERS[1], rating: 4, comment: 'Item as described, but shipping was a bit slow.', timestamp: new Date(Date.now() - 86400000 * 3).toISOString(), signature: 'mock_sig_rev3' }
     ]
 });
 
@@ -178,15 +203,17 @@ export const initializeMockData = () => {
     MOCK_USERS.forEach(user => {
         const userAds = allAds.filter(ad => ad.seller.id === user.id);
         const userAdsKey = `${USER_ADS_PREFIX}${user.id}`;
-        // Always overwrite to ensure fresh mock data on reload for testing
-        localStorage.setItem(userAdsKey, JSON.stringify(userAds));
+        // Only initialize if it doesn't exist, to preserve user-created data.
+        if (!localStorage.getItem(userAdsKey)) {
+            setUserLocalData<Ad>(USER_ADS_PREFIX, user.id, userAds);
+        }
     });
 
     const allReviews = getInitialMockReviews();
     Object.entries(allReviews).forEach(([sellerId, reviews]) => {
         const userReviewsKey = `${USER_REVIEWS_PREFIX}${sellerId}`;
         if (!localStorage.getItem(userReviewsKey)) {
-            localStorage.setItem(userReviewsKey, JSON.stringify(reviews));
+            setUserLocalData<Review>(USER_REVIEWS_PREFIX, sellerId, reviews);
         }
     });
 
@@ -206,13 +233,25 @@ export const initializeMockData = () => {
 // --- HELPERS ---
 export const simulateDelay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
+// Simulates encrypted storage by Base64 encoding the JSON string.
 export const getUserLocalData = <T>(prefix: string, userId: string): T[] => {
-    const json = localStorage.getItem(`${prefix}${userId}`);
-    return json ? JSON.parse(json) : [];
+    const base64Json = localStorage.getItem(`${prefix}${userId}`);
+    if (!base64Json) return [];
+    try {
+        return JSON.parse(atob(base64Json));
+    } catch (e) {
+        console.error(`Failed to decode/parse data for key: ${prefix}${userId}`, e);
+        // Fallback for potentially un-encoded data during development
+        try {
+            return JSON.parse(base64Json);
+        } catch (e2) {
+            return [];
+        }
+    }
 };
 
 export const setUserLocalData = <T>(prefix: string, userId: string, data: T[]) => {
-    localStorage.setItem(`${prefix}${userId}`, JSON.stringify(data));
+    localStorage.setItem(`${prefix}${userId}`, btoa(JSON.stringify(data)));
 };
 
 export const getAndSaveUser = async (updateFn: (user: User) => User): Promise<User> => {
@@ -225,6 +264,7 @@ export const getAndSaveUser = async (updateFn: (user: User) => User): Promise<Us
     if (userIndex !== -1) {
         MOCK_USERS[userIndex] = updatedUser;
     }
+    saveUsersToDb();
     localStorage.setItem(JWT_KEY, JSON.stringify(updatedUser));
 
     return updatedUser;

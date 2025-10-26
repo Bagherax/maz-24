@@ -4,10 +4,47 @@ import { useNotification } from '../../hooks/useNotification';
 import type { View } from '../../types';
 import { SparklesIcon } from '../../components/icons/SparklesIcon';
 import CategoryBrowser from './CategoryBrowser';
+import { ClockIcon } from '../../components/icons/ClockIcon';
+import { TrashIcon } from '../../components/icons/TrashIcon';
 
 interface SearchPanelProps {
     setActiveView: (view: View) => void;
 }
+
+const RecentSearches: React.FC<{
+  onSelect: (query: string) => void;
+}> = ({ onSelect }) => {
+  const { recentSearches, clearRecentSearches } = useSearch();
+
+  if (!recentSearches || recentSearches.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="p-4 border-b border-border-color">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-xs font-bold text-text-secondary uppercase tracking-wider">Recent Searches</h4>
+        <button onClick={clearRecentSearches} className="flex items-center text-xs font-semibold text-text-secondary hover:text-red-500 transition-colors">
+            <TrashIcon />
+            <span className="ml-1">Clear</span>
+        </button>
+      </div>
+      <ul className="space-y-1">
+        {recentSearches.map((search, index) => (
+          <li key={index}>
+            <button
+              onClick={() => onSelect(search)}
+              className="w-full text-left flex items-center p-2 rounded-md hover:bg-primary transition-colors"
+            >
+              <ClockIcon className="h-4 w-4 text-text-secondary mr-3 flex-shrink-0" />
+              <span className="text-sm text-text-primary truncate">{search}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
 
 const SearchPanel: React.FC<SearchPanelProps> = ({ setActiveView }) => {
     const {
@@ -56,11 +93,18 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ setActiveView }) => {
                 case 'error':
                      return <p className="text-sm text-red-400 p-4 bg-red-900/50 rounded-lg">{commandResult.payload}</p>;
                 default:
+                    // For commands that cause navigation/filtering, we show nothing in the panel
+                    // as it will close immediately.
                     return null;
             }
         }
         
-        return <CategoryBrowser onCategorySelect={handleCategorySelect} onClose={closeSearchPanel} />;
+        return (
+            <>
+                <RecentSearches onSelect={executeQuery} />
+                <CategoryBrowser onCategorySelect={handleCategorySelect} onClose={closeSearchPanel} />
+            </>
+        );
     };
 
     return (
