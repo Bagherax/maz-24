@@ -13,12 +13,11 @@ export const CLOUD_CONFIG_KEY = 'mazdady_cloud_config';
 export const ADMIN_LOG_KEY = 'mazdady_admin_log';
 export const SPONSORED_ADS_KEY = 'mazdady_sponsored_ads';
 export const AD_ANALYTICS_KEY = 'mazdady_ad_analytics';
-export const USERS_DB_KEY = 'mazdady_users_db';
 
 
 // --- MOCK USER DATABASE ---
-const INITIAL_MOCK_USERS: User[] = [
-    { id: 'user-1', username: 'mazdady_admin', email: 'admin@mazdady.com', tier: 'MAZ', isVerified: true, avatarUrl: 'https://picsum.photos/seed/admin/200', profileBannerUrl: 'https://picsum.photos/seed/admin_banner/1000/300', profileBackgroundUrl: 'https://www.toptal.com/designers/subtlepatterns/uploads/double-bubble-outline.png', role: 'super_admin', averageRating: 5.0, totalReviews: 2, followingIds: [], boostPoints: 1000 },
+export const MOCK_USERS: User[] = [
+    { id: 'user-1', username: 'mazdady_admin', email: 'admin@mazdady.com', tier: 'MAZ', isVerified: true, avatarUrl: 'https://picsum.photos/seed/admin/200', profileBannerUrl: 'https://picsum.photos/seed/admin_banner/1000/300', profileBackgroundUrl: 'https://www.toptal.com/designers/subtlepatterns/uploads/double-bubble-outline.png', role: 'super_admin', averageRating: 5.0, totalReviews: 2, followingIds: [] },
     { 
         id: 'user-2', 
         username: 'seller_pro', 
@@ -39,29 +38,11 @@ const INITIAL_MOCK_USERS: User[] = [
             welcomeMessage: "Hello! Thanks for your interest. I'll get back to you as soon as I can.",
             quickReplies: ["Yes, it's still available.", "Sorry, the price is firm.", "I can ship it to you.", "When would you like to pick it up?"]
         },
-        learnedQA: [],
-        boostPoints: 250,
+        learnedQA: []
     },
-    { id: 'user-3', username: 'casual_seller', email: 'casual@seller.com', tier: 'bronze', isVerified: false, avatarUrl: 'https://picsum.photos/seed/casual/200', profileBannerUrl: 'https://picsum.photos/seed/casual_banner/1000/300', profileBackgroundUrl: 'https://www.toptal.com/designers/subtlepatterns/uploads/leaves.png', averageRating: 4.2, totalReviews: 3, followingIds: [], boostPoints: 50 },
-    { id: 'user-4', username: 'power_user', email: 'power@user.com', tier: 'diamond', isVerified: true, avatarUrl: 'https://picsum.photos/seed/power/200', profileBannerUrl: 'https://picsum.photos/seed/power_banner/1000/300', profileBackgroundUrl: 'https://www.toptal.com/designers/subtlepatterns/uploads/upholstery.png', averageRating: 4.9, totalReviews: 52, followingIds: ['user-2'], boostPoints: 500 },
+    { id: 'user-3', username: 'casual_seller', email: 'casual@seller.com', tier: 'bronze', isVerified: false, avatarUrl: 'https://picsum.photos/seed/casual/200', profileBannerUrl: 'https://picsum.photos/seed/casual_banner/1000/300', profileBackgroundUrl: 'https://www.toptal.com/designers/subtlepatterns/uploads/leaves.png', averageRating: 4.2, totalReviews: 3, followingIds: [] },
+    { id: 'user-4', username: 'power_user', email: 'power@user.com', tier: 'diamond', isVerified: true, avatarUrl: 'https://picsum.photos/seed/power/200', profileBannerUrl: 'https://picsum.photos/seed/power_banner/1000/300', profileBackgroundUrl: 'https://www.toptal.com/designers/subtlepatterns/uploads/upholstery.png', averageRating: 4.9, totalReviews: 52, followingIds: ['user-2'] },
 ];
-
-export let MOCK_USERS: User[];
-
-const initializeUsers = () => {
-    const usersJson = localStorage.getItem(USERS_DB_KEY);
-    if (usersJson) {
-        MOCK_USERS = JSON.parse(usersJson);
-    } else {
-        MOCK_USERS = INITIAL_MOCK_USERS;
-        localStorage.setItem(USERS_DB_KEY, JSON.stringify(MOCK_USERS));
-    }
-}
-initializeUsers();
-
-export const saveUsersToDb = () => {
-    localStorage.setItem(USERS_DB_KEY, JSON.stringify(MOCK_USERS));
-};
 
 const generateMockAds = (): Ad[] => {
     const ads: Ad[] = [];
@@ -264,7 +245,6 @@ export const getAndSaveUser = async (updateFn: (user: User) => User): Promise<Us
     if (userIndex !== -1) {
         MOCK_USERS[userIndex] = updatedUser;
     }
-    saveUsersToDb();
     localStorage.setItem(JWT_KEY, JSON.stringify(updatedUser));
 
     return updatedUser;

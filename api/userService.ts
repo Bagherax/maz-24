@@ -36,7 +36,18 @@ export const getUserById = async (userId: string): Promise<User | null> => {
  */
 export const updateUserProfile = async (updates: Partial<User>): Promise<User> => {
     await simulateDelay(500);
-    return getAndSaveUser(user => ({...user, ...updates}));
+    const currentUser = await getCurrentUser(); // Fetch with follower count
+    if (!currentUser) throw new Error("Authentication required.");
+    const updatedUser = { ...currentUser, ...updates };
+    
+    // This mock doesn't persist the follower count, it's always dynamic.
+    // Just update other fields.
+    const userIndex = MOCK_USERS.findIndex(u => u.id === currentUser.id);
+    if (userIndex !== -1) {
+        MOCK_USERS[userIndex] = { ...MOCK_USERS[userIndex], ...updates };
+    }
+    localStorage.setItem(JWT_KEY, JSON.stringify(updatedUser));
+    return updatedUser;
 };
 
 
@@ -47,15 +58,25 @@ export const updateUserProfile = async (updates: Partial<User>): Promise<User> =
  */
 export const followUser = async (userIdToFollow: string): Promise<User> => {
     await simulateDelay(300);
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("Authentication required to follow users.");
+    if (currentUser.id === userIdToFollow) throw new Error("You cannot follow yourself.");
+
+    const followingIds = currentUser.followingIds || [];
+    if (!followingIds.includes(userIdToFollow)) {
+        followingIds.push(userIdToFollow);
+    }
+    const updatedUser = { ...currentUser, followingIds };
+
+    // In this mock, we have to update the user object in both the MOCK_USERS array
+    // and the JWT in localStorage to ensure consistency across the app.
+    const userIndex = MOCK_USERS.findIndex(u => u.id === currentUser.id);
+    if (userIndex !== -1) {
+        MOCK_USERS[userIndex] = updatedUser;
+    }
+    localStorage.setItem(JWT_KEY, JSON.stringify(updatedUser));
     
-    return getAndSaveUser(user => {
-        if (user.id === userIdToFollow) throw new Error("You cannot follow yourself.");
-        const followingIds = user.followingIds || [];
-        if (!followingIds.includes(userIdToFollow)) {
-            followingIds.push(userIdToFollow);
-        }
-        return { ...user, followingIds };
-    });
+    return updatedUser;
 };
 
 /**
@@ -65,10 +86,19 @@ export const followUser = async (userIdToFollow: string): Promise<User> => {
  */
 export const unfollowUser = async (userIdToUnfollow: string): Promise<User> => {
     await simulateDelay(300);
-    return getAndSaveUser(user => {
-        const followingIds = (user.followingIds || []).filter(id => id !== userIdToUnfollow);
-        return { ...user, followingIds };
-    });
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("Authentication required.");
+
+    const followingIds = (currentUser.followingIds || []).filter(id => id !== userIdToUnfollow);
+    const updatedUser = { ...currentUser, followingIds };
+    
+    const userIndex = MOCK_USERS.findIndex(u => u.id === currentUser.id);
+    if (userIndex !== -1) {
+        MOCK_USERS[userIndex] = updatedUser;
+    }
+    localStorage.setItem(JWT_KEY, JSON.stringify(updatedUser));
+
+    return updatedUser;
 };
 
 /**

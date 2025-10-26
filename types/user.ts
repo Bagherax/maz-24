@@ -31,7 +31,6 @@ export interface User {
   collections?: AdCollection[];
   chatSettings?: ChatSettings;
   learnedQA?: QAPair[];
-  boostPoints?: number;
 }
 
 // Represents a user with a temporary, local-only session.
